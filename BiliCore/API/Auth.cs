@@ -67,8 +67,10 @@ namespace BiliCommenter.API
                 var response = await hc.PostAsync(url, new StringContent(data, Encoding.UTF8, "application/x-www-form-urlencoded"));
                 var result = await response.Content.ReadAsStringAsync();
                 var model = JsonConvert.DeserializeObject<AuthModelV3>(result);
-                Account.AccessKey = model.data.token_info.access_token;
-                Account.AuthResultCode = model.code;
+                if ((Account.AuthResultCode = model.code) != -629)
+                {
+                    Account.AccessKey = model.data.token_info.access_token;
+                }
                 await FreshSSO();
             }
         }
@@ -95,7 +97,7 @@ namespace BiliCommenter.API
         public static async Task FreshSSO()
         {
             var url = $"https://api.kaaass.net/biliapi/user/sso?access_key={Account.AccessKey}";
-            using(HttpClient hc = new HttpClient())
+            using (HttpClient hc = new HttpClient())
             {
                 var response = await hc.GetAsync(url);
                 var result = await response.Content.ReadAsStringAsync();

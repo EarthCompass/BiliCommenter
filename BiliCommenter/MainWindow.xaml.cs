@@ -187,9 +187,9 @@ namespace BiliCommenter
         private void ChangeLogStatusFlyouts(object sender, RoutedEventArgs e)
         {
             if (Account.OnlineStatus)
-                ChangeLoggedFlyout(sender,e);
+                ChangeLoggedFlyout(sender, e);
             else
-                ChangeLoginFlyout(sender,e);
+                ChangeLoginFlyout(sender, e);
         }
         private void ChangeSettingFlyout(object sender, RoutedEventArgs e)
         {
@@ -221,15 +221,29 @@ namespace BiliCommenter
             {
                 // we should handle the exceptions that made it fail to login in the future version.
                 await Auth.LoginV3(username, password);
-                if (Settings.Default.IsSaveAccessKey)
+                if (Account.AuthResultCode == -629)
                 {
-                    Settings.Default.AccessKey = Account.AccessKey;
-                    Settings.Default.Save();
+                    await this.Invoke(async () =>
+                    {
+                        await this.ShowMessageAsync("Login failed.", "Wrong username or password");
+                        ResultLabel.Content = "Login failed.\nWrong username or password";
+                        return;
+                    });
+
                 }
-                await this.Invoke(async () => {
-                    await FreshUserInfo();
-                    LoginFlyout.IsOpen = false;
-                });
+                else
+                {
+                    if (Settings.Default.IsSaveAccessKey)
+                    {
+                        Settings.Default.AccessKey = Account.AccessKey;
+                        Settings.Default.Save();
+                    }
+                    await this.Invoke(async () =>
+                    {
+                        await FreshUserInfo();
+                        LoginFlyout.IsOpen = false;
+                    });
+                }
             });
             loginThread.Start();
         }
@@ -315,7 +329,8 @@ namespace BiliCommenter
             }
             else
             {
-                Thread th = new Thread(() => {
+                Thread th = new Thread(() =>
+                {
                     Thread.Sleep(500);
                     int delta = 40;
                     for (int i = 0; i < 400 / delta; i++)
@@ -326,7 +341,7 @@ namespace BiliCommenter
         }
         private void AddOrUpdate(object sender, RoutedEventArgs e)
         {
-            if(TaskPair.ContainsKey(BangumiListBox.SelectedItem as string))
+            if (TaskPair.ContainsKey(BangumiListBox.SelectedItem as string))
             {
                 TaskPair[BangumiListBox.SelectedItem as string].Message = MessageTextBox.Text;
             }
